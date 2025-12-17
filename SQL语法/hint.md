@@ -28,7 +28,7 @@
 <a name="zh-cn_topic_0283136979"></a>
 <table><thead align="left"><tr id="zh-cn_topic_0283136979"><th class="cellrowborder" valign="top" width="15.701570157015702%" id="mcps1.2.4.1.1"><p id="zh-cn_topic_0283136979"><a name="zh-cn_topic_0283136979"></a><a name="zh-cn_topic_0283136979"></a>类别</p>
 </th>
- <th class="cellrowborder" valign="top" width="32.753275327532755%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_02831369798"><a name="zh-cn_topic_0283136979"></a><a name="zh-cn_topic_0283136979"></a>链接到语法和语义</p>
+ <th class="cellrowborder" valign="top" width="32.753275327532755%" id="mcps1.2.4.1.2"><p id="zh-cn_topic_02831369798"><a name="zh-cn_topic_0283136979"></a><a name="zh-cn_topic_0283136979"></a>语法</p>
 </th>
 <th class="cellrowborder" valign="top" width="51.54515451545154%" id="mcps1.2.4.1.3"><p id="zh-cn_topic_0283136979"><a name="zh-cn_topic_0283136979"></a><a name="zh-cn_topic_0283136979"></a>说明</p>
 </th>
@@ -51,11 +51,11 @@
 </tr>
 <tr>
     <td>INDEX_ASC</td>
-    <td>提示优化器对指定的表使用升序索引扫描，如果该语句使用索引范围扫描，明确指定升序扫描范围。</td>
+    <td>提示优化器对指定的表使用升序索引扫描</td>
 </tr>
 <tr>
     <td>INDEX_DESC</td>
-    <td>提示优化器对指定的表使用降序索引扫描，如果该语句使用索引范围扫描，明确指定升降序扫描范围。</td>
+    <td>提示优化器对指定的表使用降序索引扫描</td>
 </tr>
 <tr>
     <td>NO_INDEX</td>
@@ -132,7 +132,7 @@ select /*+ index(tablename1 [index_name1] [index_name2] [...])*/* from table_nam
 参数说明：
 - tablename1：必选参数，表名
 - index_name1: 可选参数，tablename1上的索引，表名与索引名之间用空格隔开，索引名与索引名之间用空格隔开
-- 可以有多个索引名，能多个表名吗？？？。
+- 可以有多个索引名
 
 规则说明：
 - 规则1：index参数中只指定表名，没有指定使用索引名，表示必须使用索引，会从表中的所有索引中选择最优的一个索引。即使索引比全表扫描的代价大，也会选择索引，不考虑全表扫描。
@@ -156,7 +156,7 @@ select /*+ index_asc(tablename1 [index_name1] [index_name2] [...])*/* from table
 参数说明：
 - tablename1：必选参数，表名
 - index_name1: 可选参数，tablename1上的索引，表名与索引名之间用空格隔开，索引名与索引名之间用空格隔开
-- 可以有多个索引名，能多个表名吗？？？。
+- 可以有多个索引名。
 
 规则说明：
 - 规则1：如果参数只有表名，但是没有指定任何索引，说明必须使用索引，且以升序扫描。
@@ -172,7 +172,7 @@ select /*+ index_desc(tablename1 [index_name1] [index_name2] [...])*/* from tabl
 参数说明：
 - tablename1：必选参数，表名
 - index_name1: 可选参数，tablename1上的索引，表名与索引名之间用空格隔开，索引名与索引名之间用空格隔开
-- 可以有多个索引名，能多个表名吗？？？。
+- 可以有多个索引名。
 
 规则说明：
 - 规则1：如果参数只有表名，但是没有指定任何索引，说明必须使用索引，且以降序扫描。
@@ -189,7 +189,7 @@ select /*+ no_index(tablename1 [index_name1] [index_name2] [...])*/* from table_
 参数说明：
 - tablename1：必选参数，表名
 - index_name1: 可选参数，tablename1上的索引，表名与索引名之间用空格隔开，索引名与索引名之间用空格隔开
-- 可以有多个索引名，能多个表名吗？？？。
+- 可以有多个索引名。
 
 规则：
 - 规则1；如果参数只有表名，但是没有指定任何索引，说明对整个表不使用索引，则会对该表执行全表扫描。
