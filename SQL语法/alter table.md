@@ -1,7 +1,3 @@
-
-   - COMPRESS
-   添加压缩分区。前提是保证这个压缩分区所归属的表空间内具有压缩属性文件，否则插入数据的时候会报错。
-
 - drop_parition_clause
   - DROP PARTITION partition_name
     删除一个分区，partition_name 是分区名称。
@@ -59,8 +55,6 @@
 6.交换的分区的表定义、索引定义、列定义完全相同时，才允许交换。
 ```
 
-
-
 - modify_partition_clause
 修改分区的属性
   - partition_name
@@ -69,6 +63,12 @@
     对分区的初始数据页面上事务槽的个数进行修改，取值范围是[1,255]。
     - 修改指定分区的INITRANS属性，并且会同步修改该分区的所有子分区的INITRANS。
     - 对于新分配的页面，修改后的新值是有效的，对已经分配的老页面是无效的。
+    ```
+    @说明：INITRANS使用
+       1.高并发oltp系统，当出现频繁的update/insert操作导致事务槽争用时，可以将INITRANS设为4-8(INITRANS=10时)，减少动态扩展开销。
+       2.索引块的默认INITRANS=2可能无法满足高并发写入需求，可以将其设置为3。
+    ```
+    
   - storage_alter_clause
     表的存储空间的最大值。
     - UNLINITED
