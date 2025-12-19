@@ -119,7 +119,7 @@ ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=ENABLE;
 
 - **RELOAD {HBA | PBL} CONFIG**
 
-在线加载zhba.conf文件，使白名单配置生效。
+在线加载oghba.conf文件，使白名单配置生效。
 
 在线加载pbl.conf文件，使弱口令配置生效。
 
@@ -149,7 +149,7 @@ kill会话，session_id是会话ID，serial是序列号ID。
 
 - **{ ADD | DELETE } HBA ENTRY** ***hba_conf_entry***
 
-向用户白名单文件zhba.conf中增加或删除一条用户白名单。
+向用户白名单文件oghba.conf中增加或删除一条用户白名单。
 
 - ***hba_conf_entry***
 
@@ -306,7 +306,7 @@ ALTER SYSTEM LOAD DICTIONARY FOR education;
 ALTER SYSTEM INIT DICTIONARY;
 ```
 
-- 在线加载zhba.conf文件。
+- 在线加载oghba.conf文件。
 
 ```
 ALTER SYSTEM RELOAD HBA CONFIG;
