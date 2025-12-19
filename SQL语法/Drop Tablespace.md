@@ -1,0 +1,34 @@
+## 删除表空间
+
+### 语法描述
+#### stmt
+```grammar
+DROP TABLESPACE name
+    [INCLUDING CONTENTS
+        [{AND|KEEP} DATAFILES [CASCADE CONSTRAINTS]]
+    ]
+```
+- AND|KEEP
+    - AND: 删除数据文件
+    - KEEP: 保留数据文件
+- CASCADE CONSTRAINTS: 删除表空间数据相关的级联
+### 示例
+```SQL
+-- 1. 基本删除表空间（仅删除元数据，保留物理文件）
+DROP TABLESPACE tbs1;
+
+-- 2. 删除表空间、内容和数据文件
+DROP TABLESPACE tbs2 INCLUDING CONTENTS;
+
+-- 3. 删除表空间、内容和数据文件
+DROP TABLESPACE tbs3 INCLUDING CONTENTS AND DATAFILES;
+
+-- 4. 删除表空间、内容但保留数据文件
+DROP TABLESPACE tbs4 INCLUDING CONTENTS KEEP DATAFILES;
+
+-- 5. 删除表空间及其所有内容、数据文件和级联约束
+DROP TABLESPACE tbs5 INCLUDING CONTENTS AND DATAFILES CASCADE CONSTRAINTS;
+
+-- 6. 删除表空间、内容、保留数据文件但删除级联约束
+DROP TABLESPACE tbs6 INCLUDING CONTENTS KEEP DATAFILES CASCADE CONSTRAINTS;
+```
