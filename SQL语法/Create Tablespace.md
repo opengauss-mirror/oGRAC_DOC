@@ -1,59 +1,67 @@
-## 创建表空间
+# CREATE TABLESPACE
 
-### 语法描述
-#### stmt
-```grammar
+## 功能描述
+创建表空间
+
+## 注意事项
+- 执行需要CREATE TABLESPACE权限
+- 不能将数据文件指定到日志目录
+- 普通用户不建议使用system表空间
+- 表空间单个数据库文件大小上限和PAGE_SIZE有关，对于UNDO表空间，大小上限 = 4 * 1024 * 1024 * PAGE_SIZE，其他表空间大小上限 = 1024 * 1024 * 1024 * PAGE_SIZE
+
+## 语法格式
+**stmt:**
+```
 CREATE [UNDO] TABLESPACE name
     DATAFILE {datafile_clause [, ...]} 
     [NOLOGGING]
     [autooffline_clause]
     [EXTENT AUTOALLOCATE]
 ```
-- UNDO: 创建UNDO表空间
-- datafile_clause: 表空间数据文件描述，多个逗号分割
-- NOLOGGING: 表空间为NOLOGGING类型
-- autooffline_clause：表空间离线配置
-- EXTENT AUTOALLOCATE: 表空间extent size字段扩展
-
 
 **datafile_clause:**
-```grammar
-    name SIZE size_clause
+```
+    file_name SIZE size_clause
     [COMPRESS]
     [autoextend_clause]
 ```
-- name：数据文件路径。支持绝对路径和相对路径
-- size_clause: 数据文件大小描述
-- COMPRESS: 表压缩特性,集群模式不适用
-- autoextend_clause: 表空间扩展设置
 
 **autoextend_clause:**
-```grammar
+```
     AUTOEXTEND {OFF 
                 |   ON [NEXT size_clause] [MAXSIZE {size_clause | UNLIMITED}]
                 }
 ```
-- OFF: 关闭自动扩展
-- ON: 开启自动扩展
-    - NEXT: 自动扩展的大小
-    - MAXSIZE: 自动扩展的上限
-    - UNLIMITED: 无限扩展
 
 **autooffline_clause:**
-```grammar
+```
     AUTOOFFLINE [ON|OFF]
 ```
-- ON: 开启表空间自动离线。启动时生效，文件打开失败自动离线。
-- OFF: 关闭表空间自动离线。
 
 **size_clause:**
-```grammar
+```
     size [K|M|G]
 ```
 - K: KB
 - M: MB
 - G: GB
-### 示例
+
+## 参数说明
+- UNDO: 创建UNDO表空间
+- file_name: 表空间数据文件路径，可以指定绝对路径，也可以指定为相对路径，相对路径保存在数据目录。数据文件所在目录/父目录的属主和属组与数据库安装用户一致，权限700
+- NOLOGGING: 表空间为NOLOGGING类型
+- EXTENT AUTOALLOCATE: 表空间extent size字段扩展
+- COMPRESS: 表压缩特性,集群模式不适用
+- AUTOEXTEND OFF：关闭表空间大小自动扩展。默认关闭
+- AUTOEXTEND ON: 开启自动扩展
+    - NEXT: 自动扩展的大小
+    - MAXSIZE: 自动扩展的上限
+    - UNLIMITED: 无限扩展
+- AUTOOFFLINE ON/OFF：表空间自动离线，启动时生效，文件打开失败自动离线。只能对用户表空间设置。
+
+
+
+## 示例
 ```SQL
 -- 1. 创建基础表空间
 CREATE TABLESPACE tbs1

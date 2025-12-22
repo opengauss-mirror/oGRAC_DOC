@@ -1,36 +1,37 @@
-## 创建表
+# CREATE TABLE
 
-### 语法描述
-#### stmt
+## 功能描述
+CREATE TABLE用于创建表
+
+## 注意事项
+- 创建当前用户的表需要有CREATE TABLE权限，创建其他普通用户的表需要有CREATE ANY TABLE权限，普通用户不可创建SYS表
+- 自增列只支持int/bigint类型，一个表只支持一个自增列，自增列必须是主键或唯一索引
+- 外键引用默认引用父表的主键，没有主键报错
+- CHECK约束限制字段数量最大16个
+- 创建本地临时表时需要开启LOCAL_TEMPORARY_TABLE_ENABLED, 表名以#开头，不支持ON COMMIT DELETE ROWS
+- 临时表的BLOB被定义为RAW(8000), CLOB被定义为VARCHAR(8000B)
+
+## 语法格式
 ```
 CREATE [[GLOBAL] TEMPORARY] TABLE [IF NOT EXISTS] [schema_name.]table_name
     {({column_def_clause}[,...] [external_constraint][,...])} | {AS query}
-    [ON COMMENT {DELETE|PRESERVE} ROWS]
+    [ON COMMIT {DELETE|PRESERVE} ROWS]
     [physical_properties_clause]
     [table_attr_clause]
-    [CRMODE {PAGE|ROW}]
+    [CRMODE PAGE]
 ```
-- column_def_clause: 列定义
-- external_constraint: 表约束
-- query: 查询子句
-- physical_properties_clause: 物理存储属性
-- table_attr_clause：表级别属性
-- CRMODE
-    - PAGE: 页级MVCC
-    - ROW: 行级MVCC
 
 **column_def_clause:**
 ```
     column_name {datatype | SERIAL}
     [DEFAULT expr [ON UPDATE expr]]
-    [AUTO INCREMENT]
+    [AUTO_INCREMENT]
     [COMMENT 'comment_str']
     [COLLATE collation_name]
-    [internal_constraint][...]
+    [col_level_constraint][...]
 ```
-- internal_constraint: 列约束
 
-**internal_constraint:**
+**col_level_constraint:**
 ```
     CONSTRAINT constraint_name {[NOT] NULL
                                 | UNIQUE
@@ -38,7 +39,6 @@ CREATE [[GLOBAL] TEMPORARY] TABLE [IF NOT EXISTS] [schema_name.]table_name
                                 | CHECK(expr)
                                 | refenence_clause }[...]
 ```
-- refenence_clause: 外键关联
 
 **refenence_clause:**
 ```
@@ -50,20 +50,19 @@ CREATE [[GLOBAL] TEMPORARY] TABLE [IF NOT EXISTS] [schema_name.]table_name
     CONSTRAINT constraint_name {UNIQUE(column_name[,...]) [using_index_clause]
                                 | PRIMARY KEY(column_name[,...]) [using_index_clause]
                                 | CHECK(expr)
-                                | FOREIGN KEY(column_name[,...]) refenence_ex_clause}
+                                | FOREIGN KEY(column_name[,...]) refenence_extend_clause}
 ```
-- using_index_clause: 指定索引
-- refenence_ex_clause: 外键关联
 
 **using_index_clause:**
 ```
-    USE INDEX [ INITRANS int
+    USING INDEX [ INITRANS int
+                | PCTFREE int
                 | TABLESPACE tablespace_name
                 | LOCAL
               ]
 ```
 
-**refenence_ex_clause:**
+**refenence_extend_clause:**
 ```
     REFRENCES [schema_name.]table_name[(column_name[,...])] [ON DELETE {CASCADE | SET NULL}]
 ```
@@ -71,8 +70,8 @@ CREATE [[GLOBAL] TEMPORARY] TABLE [IF NOT EXISTS] [schema_name.]table_name
 **physical_properties_clause**
 ```
     segment_attr_clause
-    | ORGANZATION EXTERNAL external_table_clause
-    | FORMAT row_format_clause
+    | ORGANIZATION EXTERNAL external_table_clause
+    | FORMAT ({ASF|CSF})
 ```
 
 **segment_attr_clause**
@@ -97,7 +96,7 @@ CREATE [[GLOBAL] TEMPORARY] TABLE [IF NOT EXISTS] [schema_name.]table_name
 
 **external_table_clause**
 ```
-    ([TYPE {LOADER|DATAPUMP}] external_data_properties)
+    ([TYPE LOADER] external_data_properties)
 ```
 
 **external_data_properties**
@@ -112,11 +111,6 @@ CREATE [[GLOBAL] TEMPORARY] TABLE [IF NOT EXISTS] [schema_name.]table_name
     RECORDS DELIMITED BY records_delimiter FIELDS TERMINATED BY fields_term
 ```
 
-**row_format_clause**
-```
-    ({ASF|CSF})
-```
-
 **table_attr_clause**
 ```
     [column_attr_clause]
@@ -126,22 +120,43 @@ CREATE [[GLOBAL] TEMPORARY] TABLE [IF NOT EXISTS] [schema_name.]table_name
 
 **column_attr_clause**
 ```
-    [LOB_storage_clause]
+    [LOB (LOB_item) STORE AS {[(LOB_parameters)]}]
     [APPENDONLY {ON|OFF}]
-```
-
-**LOB_storage_clause**
-```
-    LOB (LOB_item) STORE AS {[(LOB_parameters)]}
 ```
 
 **LOB_parameters**
 ```
     [TABLESPACE tablespace_name | {ENABLE | DISABLE} STORAGE IN ROW][ ...]
 ```
+## 参数说明
+- TEMPORARY: 本地临时表
+- GLOBAL TEMPORARY: 全局临时表 
+- ON COMMIT DELETE ROWS: 事务级临时表，事务结束时会清空数据，不会删除表定义。默认行为
+- ON COMMIT PRESERVE ROWS: 会话级临时表，会话结束时会清空数据，不会删除表定义
+- CRMODE：MVCC模式。PAGE是页级MVCC, 默认值为CR_MODE配置
+- SERIAL: 自增列，和AUTO_INCREMENT的区别在于SERIAL默认数据类型是BIGINT
+- DEFAULT expr [ON UPDATE expr]: 列默认值。ON UPDATE expr是兼容语法，UPDATE行数据不知道该列取update默认值填充
+- COLLATE：字符序，支持UTF8_BIN（区分大小写）, UTF8_GENERAL_CI（不区分大小写）, UTF8_UNICODE_CI（不区分大小写）, GBK_BIN（区分大小写）, GBK_CHINESE_CI（不区分大小写）
+- REFRENCES [schema_name.]table_name[(column_name)] ON DELETE CASCADE: 外键级联设置。外表删除时本表删除
+- REFRENCES [schema_name.]table_name[(column_name)] ON DELETE SET NULL：外键级联设置。外表删除时本表设置为NULL
+- USING INDEX：为约束指定索引属性
+- INITRANS: 初始化数据库事务槽个数
+- MAXTRANS: 数据库事务槽最大个数
+- FORMAT ({ASF|CSF}): 行格式, 默认为ASF(Aligned Stream Format)，临时表不支持CSF(Compact Stream Format)
+- STORAGE ({INITIAL int [K|M|G|T] | MAXSIZE {UNLIMITED | int [K|M|G|T]}}[ ...]): INITIAL指定表初始大小, MAXSIZE表存储的最大值, UNLIMITED代表无限存储
+- RECORDS DELIMITED BY records_delimiter FIELDS TERMINATED BY fields_term: 外部表记录分割符和字段分隔符.records_delimiter支持单字符或者newline， fields_term支持单字符
+- ORGANIZATION EXTERNAL： 外部表相关。外部表列不支持LOB类型
+- TYPE LOADER: 数据库转换类型。LOADER是文本转换
+- DIRECTORY：外部表所在目录名称，需要使用CREATE DIRECTORY提前创建
+- ACCESS PARAMETERS: 转换参数
+- LOCATION: 文件名称
+- AUTO_INCREMENT [=] value: 自增初始值
+- APPENDONLY {ON|OFF}: 追加写。如果开启后不同线程写一张表会申请新的页做擦或许，减少锁等待，但页空间浪费较多。默认关闭
+- LOB (LOB_item) STORE AS： 指定lob字段（LOB_ITEM）单独segment存储
+    - ENABLE  STORAGE IN ROW：行内存储
+    - DISABLE STORAGE IN ROW：行外存储
 
-
-### 示例
+## 示例
 ```SQL
 -- 1. 简单员工表
 CREATE TABLE employees (
@@ -209,13 +224,6 @@ SELECT product_id, SUM(quantity) as total_qty
 FROM sales
 GROUP BY product_id;
 
--- 创建行级MVCC表（默认）
-CREATE TABLE oltp_table (
-    account_id SERIAL PRIMARY KEY,
-    balance DECIMAL(15,2),
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) CRMODE ROW;
-
 -- 创建页级MVCC表
 CREATE TABLE page_mvcc_table (
     id SERIAL PRIMARY KEY,
@@ -252,6 +260,3 @@ ORGANIZATION EXTERNAL (
     LOCATION 'simple.csv'
 );
 ```
-
-CREATE TABLESPACE lob_ts
-    DATAFILE '/home/ogracdba/data/tbs11111.dbf' SIZE 1G;

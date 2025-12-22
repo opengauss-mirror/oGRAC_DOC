@@ -1,7 +1,7 @@
+# CREATE TABLE
+
 ## 功能描述
-
-创建分区表
-
+创建分区表。
 分区表是将一个逻辑上的大表，在物理存储上分割成多个更小、更易管理的部分（称为“分区”或“子表”）的技术。每个分区可以独立存储、备份、维护和查询，但对用户和应用来说，它仍然像一张完整的表。oGRAC支持范围分区，列表分区，哈希分区，间隔分区。
 
 ## 注意事项
@@ -11,29 +11,28 @@
 - 支持设置为分区键的列类型：UINT32、UINT64、INTEGER、BIGINT、REAL、NUMBER、NUMBER2、NUMBER3、DECIMAL、DATE、TIMESTAMP、INTERVAL_DS、INTERVAL_YM、CHAR、VARCHAR、STRING、BINARY、RAW
 - 最多支持16777216个分区，采用HASH分区时最多支持8388608个分区
 
-## 语法描述
-
+## 语法格式
 **stmt:**
 ```
 CREATE TABLE [IF NOT EXISTS] [schema_name.]table_name
     ({column_def_clause}[,...] [external_constraint][,...])
-    [ON COMMENT {DELETE|PRESERVE} ROWS]
+    [ON COMMIT {DELETE|PRESERVE} ROWS]
     [physical_properties_clause]
     [table_attr_clause]
-    [CRMODE {PAGE|ROW}]
+    [CRMODE PAGE]
 ```
 
 **column_def_clause:**
 ```
     column_name {datatype | SERIAL}
     [DEFAULT expr [ON UPDATE expr]]
-    [AUTO INCREMENT]
+    [AUTO_INCREMENT]
     [COMMENT 'comment_str']
     [COLLATE collation_name]
-    [internal_constraint][...]
+    [col_level_constraint][...]
 ```
 
-**internal_constraint:**
+**col_level_constraint:**
 ```
     CONSTRAINT constraint_name {[NOT] NULL
                                 | UNIQUE
@@ -52,51 +51,20 @@ CREATE TABLE [IF NOT EXISTS] [schema_name.]table_name
     CONSTRAINT constraint_name {UNIQUE(column_name[,...]) [using_index_clause]
                                 | PRIMARY KEY(column_name[,...]) [using_index_clause]
                                 | CHECK(expr)
-                                | FOREIGN KEY(column_name[,...]) refenence_ex_clause}
+                                | FOREIGN KEY(column_name[,...]) refenence_extend_clause}
 ```
 
 **using_index_clause:**
 ```
-    USEING INDEX [ INITRANS int
+    USING INDEX [ INITRANS int
                 | TABLESPACE tablespace_name
                 | LOCAL [({PARTITION partition_name [TABLESPACE tablespace_name | INITRANS int | PCTFREE int | ({SUBPARTITION subpartition_name[TABLESPACE tablespace_name]} [,...] )]}[,...])]
               ] [ ...]
 ```
 
-**refenence_ex_clause:**
+**refenence_extend_clause:**
 ```
     REFRENCES [schema_name.]table_name[(column_name[,...])] [ON DELETE {CASCADE | SET NULL}]
-```
-
-**physical_properties_clause**
-```
-    segment_attr_clause
-    | FORMAT row_format_clause
-```
-
-**segment_attr_clause**
-```
-    { physical_attr_clause | TABLESPACE tablespace_name}[ ...]
-```
-
-**physical_attr_clause**
-```
-    {
-        PCTFREE int
-        | INITRANS int
-        | MAXTRANS int
-        | storage_clause
-    }[ ...]
-```
-
-**storage_clause**
-```
-    STORAGE ({INITIAL int [K|M|G|T] | MAXSIZE {UNLIMITED | int [K|M|G|T]}}[ ...])
-```
-
-**row_format_clause**
-```
-    ({ASF|CSF})
 ```
 
 **table_attr_clause**
@@ -108,13 +76,8 @@ CREATE TABLE [IF NOT EXISTS] [schema_name.]table_name
 
 **column_attr_clause**
 ```
-    [LOB_storage_clause]
+    [LOB (LOB_item) STORE AS LOB_segname [(LOB_parameters)]]
     [APPENDONLY {ON|OFF}]
-```
-
-**LOB_storage_clause**
-```
-    LOB (LOB_item) STORE AS LOB_segname [(LOB_parameters)]
 ```
 
 **LOB_parameters**
@@ -189,7 +152,6 @@ CREATE TABLE [IF NOT EXISTS] [schema_name.]table_name
 **physical_properties_clause**
 ```
     segment_attr_clause
-    | ORGANZATION EXTERNAL external_table_clause
     | FORMAT row_format_clause
 ```
 
@@ -214,7 +176,18 @@ CREATE TABLE [IF NOT EXISTS] [schema_name.]table_name
 ```
 
 ## 参数说明
-
+- [普通表共有的参数](Create%20Table.md#参数说明)
+- range_partition_clause: RANGE分区
+- list_partition_clause: LIST分区
+- hash_partition_clause: HASH分区
+- interval_partition_clause: INTERVAL分区
+- partition_key: 分区键所在列的集合
+- VALUES LESS THAN: RANGE分区的分区键最大值
+- SUBPARTITION BY {RANGE|LIST|HASH}: 定义二级分区分区方式
+- MAXVALUE：分区特殊定义，最大值
+- VALUES(value): LIST分区键值
+- VALUES(DEFAULT): DEFAULT分区，默认值所在分区
+- PARTITIONS partition_count: HASH分区数，指定后自动创建partition_count个分区，数据均匀分布
 
 
 ## 示例
@@ -311,13 +284,3 @@ SUBPARTITION BY LIST (region)
     PARTITION sales_future VALUES LESS THAN (MAXVALUE)
 );
 ```
-
-CREATE TABLE sales_range (
-sale_id clob,
-sale_date DATE,
-amount NUMBER,
-region VARCHAR2(50)
-)
-PARTITION BY LIST (sale_id) (
-PARTITION sales_q1 VALUES  ('1')
-);
