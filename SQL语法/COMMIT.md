@@ -18,7 +18,7 @@
 #### 语法格式
 
 ```
-COMMIT [ TRANSACTION | PREPARED XID | FORCE LTID ]
+COMMIT [ TRANSACTION ]
 ```
 
 #### 参数说明
@@ -26,23 +26,6 @@ COMMIT [ TRANSACTION | PREPARED XID | FORCE LTID ]
 | 语法                       | 说明                                                     |
 | ------------------------ | ------------------------------------------------------ |
 | `COMMIT [ TRANSACTION ]` | 提交当前事务。`TRANSACTION` 为可选的增强可读性关键字，与直接执行 `COMMIT` 效果相同。 |
-| `COMMIT PREPARED 'XID'`  | 提交已完成的全局事务分支。                                          |
-| `COMMIT FORCE 'LTID'`    | 在故障恢复场景下，强制提交因页面损坏等原因而无法正常回滚的本地事务。                     |
-
-标识符说明：
-
-- `XID`（事务标识符）  
-  格式为点分字符串：`FormatID.GlobalTransactionID.BranchID`
-  
-  - `FormatID`：整数，有效范围 `[0, 9223372036854775807]`
-  
-  - `GlobalTransactionID`：BASE16 编码字符串，长度 ≤ 128 字节
-  
-  - `BranchID`：BASE16 编码字符串，长度 ≤ 128 字节
-
-- `LTID`（本地事务标识符）  
-  格式为点分字符串：`SEG_ID.SLOT.XNUM`  
-  各字段值可通过查询系统视图 `DV_TRANSACTIONS` 中的 `SEG_ID`、`SLOT`、`XNUM` 列获取。
 
 #### 示例
 
