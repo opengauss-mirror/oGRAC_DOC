@@ -18,8 +18,6 @@ ALTER SYSTEM
 
  | SET parameter_name = parameter_value [ SCOPE = { MEMORY | PFILE | BOTH } ]
 
- | SET REPLICATION { ON '[IP]:PORT' | OFF }
-
  | LOAD DICTIONARY FOR [ schema_name.]object_name
 
  | INIT DICTIONARY | RELOAD {HBA | PBL} CONFIG
@@ -39,8 +37,6 @@ ALTER SYSTEM
  | DUMP CTRLFILE
 
  | DEBUG MODE debug_parameter_name = debug_parameter_value
-
- | STOP BUILD
 
  | DUMP CATALOG { TABLE table_name | USER user_name } [ TO 'folders' ]
 
@@ -74,38 +70,6 @@ ALTER SYSTEM
 • **MEMORY**：仅内存生效，重启失效 。只适用于动态参数，不允许静态参数使用此模式设置。
 • **PFILE**：仅写入配置文件，重启生效  。动态参数与静态参数都一样可以。也是静态参数唯一可以使用的方式。
 • **BOTH**：既写入到初始化参数文件，也在内存上修改，立即生效。同样也只适用于动态参数，静态参数则不允许。（默认）
-
-- **SET REPLICATION { ON '[IP]:PORT' | OFF }**
-
-启用/禁用复制监听，动态生效。
-
-- ON ':PORT'
-  
-  在原有IP地址，指定端口PORT上开启监听，端口需 ≥1024，0 表示关闭。
-
-- ON 'IP:PORT'
-  
-  在指定的IP地址、端口PORT上开启监听。IP地址和冒号之间不允许出现空格，否则会报错。IP最多可以指定8个，不同IP之间用逗号分隔，且不允许出现空格。
-  
-  修改监听IP地址和端口生效后，需要同步修改主备的复制链路信息，才能使主备链路功能正常。当备机的复制监听IP和端口为*ip1:port1*时，修改主机的复制监听IP和端口为ip:port，需要在主机和备机上执行如下操作：
-  
-  主机:
-
-```
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=DEFER; 
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2 = 'LOCAL_HOST=ip SERVICE=ip1:port1 PRIMARY_ROLE AFFIRM'; 
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=ENABLE;
-```
-
-       备机：
-
-```
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=DEFER;
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2 = 'LOCAL_HOST=ip1 SERVICE=ip:port PRIMARY_ROLE AFFIRM';
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=ENABLE;
-```
-
-        OFF：关闭监听。
 
 - LOAD DICTIONARY FOR [*****schema_name*****].*****object_name***
 
@@ -155,15 +119,15 @@ kill会话，session_id是会话ID，serial是序列号ID。
 
 格式为'type user address'，参数说明请参考表1。
 
-| 参数      | 描述                       | 备注                                                                                                                                                                                                |
-| ------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| type    | 建立连接的类型。                 | 连接类型：
-<br/>- host：普通 TCP 或 SSL 连接。
-<br/>- hostssl：仅 SSL 连接（若服务端开启 SSL 而客户端未配置，则拒绝连接）。                                                                                                             |
-| user    | 允许访问数据库的指定用户。            | * 表示所有用户。<br/>若用户名含特殊字符（如 #、*、TAB），需用双引号包裹，如 "#abc"。单行仅能指定一个用户。                                                                                                                                   |
-| address | 允许访问的 IP 地址范围（支持逗号分隔多个）。 | IP地址支持IPV4、IPV6地址、或指定子网掩码长度表示一个子网网段。支持格式：<br/><br/>- IPv4/IPv6 单地址：192.168.1.111、20AB::9217:acff:feab:fcd0
-<br/>- 子网掩码：192.168.2.0/24、20CD::2654:addf:3ab2:fed0/64
-<br/>- 全网段：*.*.*.* 或 0.0.0.0/0 |
+| 参数                                                      | 描述                       | 备注                                                                                                         |
+| ------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| type                                                    | 建立连接的类型。                 | 连接类型：                                                                                                      |
+| <br/>- host：普通 TCP 或 SSL 连接。                            |                          |                                                                                                            |
+| <br/>- hostssl：仅 SSL 连接（若服务端开启 SSL 而客户端未配置，则拒绝连接）。      |                          |                                                                                                            |
+| user                                                    | 允许访问数据库的指定用户。            | * 表示所有用户。<br/>若用户名含特殊字符（如 #、*、TAB），需用双引号包裹，如 "#abc"。单行仅能指定一个用户。                                            |
+| address                                                 | 允许访问的 IP 地址范围（支持逗号分隔多个）。 | IP地址支持IPV4、IPV6地址、或指定子网掩码长度表示一个子网网段。支持格式：<br/><br/>- IPv4/IPv6 单地址：192.168.1.111、20AB::9217:acff:feab:fcd0 |
+| <br/>- 子网掩码：192.168.2.0/24、20CD::2654:addf:3ab2:fed0/64 |                          |                                                                                                            |
+| <br/>- 全网段：*.*.*.* 或 0.0.0.0/0                          |                          |                                                                                                            |
 
 - **FLUSH BUFFER**
 
@@ -198,12 +162,6 @@ kill会话，session_id是会话ID，serial是序列号ID。
     导出文件上限为 10 MB，超过10M则报错，需将文件删除后SYS 用户可导出所有用户信息；普通用户仅可导出自身信息；DBA 用户可导出普通用户和其他 DBA 用户信息。重新进行DUMP操作。
 
     SYS用户可以DUMP所有用户的信息；普通用户只可以DUMP自己的信息；DBA用户可以DUMP普通用户和其他DBA用户下的信息。
-
-- **STOP BUILD**
-
-停止备机或级联备机的基线重建。
-
-**生效时机**：仅在主机（或备机）处于发送数据阶段执行有效；若数据发送已完成，则无法停止对端的 build 进程。
 
 - **RECYCLE SHAREDPOOL [FORCE]**
 
@@ -260,31 +218,6 @@ SHOW PARAMETER UNDO_RETENTION_TIME;
 ```
 --修改值
 ALTER SYSTEM SET UNDO_RETENTION_TIME=1200 SCOPE=MEMORY;
-```
-
-- 设置复制监听。
-
-```
---关闭监听
-ALTER SYSTEM SET REPLICATION OFF;
-```
-
-```
---开启监听（指定 IP 和端口）
-ALTER SYSTEM SET REPLICATION ON '127.0.0.1:1611';
-```
-
-```
---当监听IP地址和端口生效后，需要同步修改主备的复制链路信息，才能使主备链路功能正常。
---假设备机的复制监听IP和端口为127.0.0.1:1611时，修改主机的复制监听IP和端口为10.10.10.10:1888。
---主机需执行如下操作。
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=DEFER;
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2 = 'LOCAL_HOST=10.10.10.10 SERVICE=127.0.0.1:1611 PRIMARY_ROLE AFFIRM';
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=ENABLE;
---备机需执行如下操作。
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=DEFER;
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2 = 'LOCAL_HOST=127.0.0.1 SERVICE=10.10.10.10:1888 PRIMARY_ROLE AFFIRM';
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_2=ENABLE;
 ```
 
 - 加载表到数据字典中。
@@ -375,8 +308,4 @@ ALTER SYSTEM DUMP CATALOG TABLE TEST;
 ALTER SYSTEM DUMP CATALOG USER TEST;
 ```
 
-- 停止重建基线。
-  
-  ```
-  ALTER SYSTEM STOP BUILD;
-  ```
+- 
