@@ -63,10 +63,14 @@ yum install -y wget python3 python3-devel iputils iproute --skip-broken
 - 可以在[openGauss官网](https://docs.opengauss.org/zh/)的`下载`页面进行安装包的下载获取。
 
 ```shell
-假如安装包放在节点一的/home/ogdba目录下，则需要执行下面这个命令给节点二也传输一份
+假如安装包放在节点一的/data/ogdba目录下，则需要执行下面这个命令给节点二也传输一份
 
-scp ogdba[ip2]:/home/ogdba [package_name]
+scp ogdba[ip2]:/data/ogdba [package_name]
 ```
+
+>说明：
+>
+> - 避免将安装包放在/home/ogdba目录下，防止安装报错。
 
 ---
 
@@ -87,16 +91,18 @@ scp ogdba[ip2]:/home/ogdba [package_name]
 
 节点1操作如下：
 ```shell
-cd /home/ogdba
+cd /data/ogdba
 tar -zxvf [package_name]
-cd oGRAC/pkg/deploy/action
+chmod 777 ograc_connector -R; chown root:root ograc_connector -R
+cd ograc_connector/action
 ntpdate -u [ip2]  # 同步机器时间
 date   # 检查两台机器时间是否同步，否则 CMS 无法启动
 ```
 节点2操作如下：
 ```shell
-cd /home/ogdba
+cd /data/ogdba
 tar -zxvf [package_name]
+chmod 777 ograc_connector -R; chown root:root ograc_connector -R
 ```
 
 #### 3.2 LUN 软链接建立（两节点均需执行，盘符以 by-id 为准）
